@@ -229,6 +229,9 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 	collision = std::make_shared<PCollision>();
 
+
+
+
 	//
 	//
 	//Actor init
@@ -240,32 +243,32 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 	//Car 1
 	{
-		std::shared_ptr<BasicCar> tempActor = std::make_shared<BasicCar>();
-		tempActor->Initialise(commandList, modelManager->GetModel(Model::CAR1), textureManager->GetTexture(Texture::CAR1V1));
-		tempActor->SetPositions(20.0f, -20.0f);
-		tempActor->InitialiseAABBCollision();
+		std::shared_ptr<BasicCar> carActor = std::make_shared<BasicCar>();
+		carActor->Initialise(commandList, modelManager->GetModel(Model::CAR1), textureManager->GetTexture(Texture::CAR1V1));
+		carActor->SetPositions(20.0f, -20.0f);
+		carActor->InitialiseAABBCollision();
 
-		actorList.push_back(tempActor);
+		dynamicActorList.push_back(carActor);
 	}
 
 	//Car 2
 	{
-		std::shared_ptr<BasicCar> tempActor = std::make_shared<BasicCar>();
-		tempActor->Initialise(commandList, modelManager->GetModel(Model::CAR2), textureManager->GetTexture(Texture::CAR2V1));
-		tempActor->SetPositions(0.0f, -2.0f);
-		tempActor->InitialiseAABBCollision();
+		std::shared_ptr<BasicCar> carActor = std::make_shared<BasicCar>();
+		carActor->Initialise(commandList, modelManager->GetModel(Model::CAR2), textureManager->GetTexture(Texture::CAR2V1));
+		carActor->SetPositions(0.0f, -2.0f);
+		carActor->InitialiseAABBCollision();
 
-		actorList.push_back(tempActor);
+		dynamicActorList.push_back(carActor);
 	}
 
 	//Car 3
 	{
-		std::shared_ptr<BasicCar> tempActor = std::make_shared<BasicCar>();
-		tempActor->Initialise(commandList, modelManager->GetModel(Model::CAR3), textureManager->GetTexture(Texture::CAR3V1));
-		tempActor->SetPositions(-20.0f, -2.0f);
-		tempActor->InitialiseAABBCollision();
+		std::shared_ptr<BasicCar> carActor = std::make_shared<BasicCar>();
+		carActor->Initialise(commandList, modelManager->GetModel(Model::CAR3), textureManager->GetTexture(Texture::CAR3V1));
+		carActor->SetPositions(-20.0f, -2.0f);
+		carActor->InitialiseAABBCollision();
 
-		actorList.push_back(tempActor);
+		dynamicActorList.push_back(carActor);
 	}
 	
 	//
@@ -353,7 +356,6 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 		memcpy(cbvGPUAddress[i] + position, &cbLightObject, sizeof(cbLightObject));
 		position += ConstantLightObjectAlignedSize;
 
-
 		//Give the actor there constant buffer location
 		ALogo->SetConstantBufferOffset(position);
 		memcpy(cbvGPUAddress[i] + position, &cbPerObject, sizeof(cbPerObject));  // logos's constant buffer data
@@ -361,7 +363,7 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 		position += ConstantBufferObjectAlignedSize;
 
 		//Tell each actor its constant buffer location
-		for (std::vector<std::shared_ptr<LEActor>>::iterator it = actorList.begin(); it != actorList.end(); it++)
+		for (std::vector<std::shared_ptr<LEActor>>::iterator it = dynamicActorList.begin(); it != dynamicActorList.end(); it++)
 		{
 			(*it)->SetConstantBufferOffset(position);
 			memcpy(cbvGPUAddress[i] + position, &cbPerObject, sizeof(cbPerObject));
@@ -442,6 +444,8 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 void LittleEngineD12::Update(float deltaTime)
 {
+	UpdateCamera(deltaTime);
+
 	//
 	//Camera
 	//
@@ -455,7 +459,6 @@ void LittleEngineD12::Update(float deltaTime)
 
 	if (LEState == State::Logo)
 	{
-
 		//
 		//LOGO
 		//
@@ -467,7 +470,7 @@ void LittleEngineD12::Update(float deltaTime)
 		{
 			projMat = XMMatrixPerspectiveFovLH(80.0f*(3.14f / 180.0f), (float)windowSize.x / (float)windowSize.y, 0.1f, 1000.0f);
 			
-			// set starting camera state
+			// Change the camera to Perspective
 			cameraPosition = XMFLOAT4(0.0f, 2.0f, -80.0f, 0.0f);
 			cameraTarget = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 			cameraUp = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
@@ -487,7 +490,7 @@ void LittleEngineD12::Update(float deltaTime)
 	else if (LEState == State::Playing)
 	{
 		XMMATRIX worldMatrix;
-		for (std::vector<std::shared_ptr<LEActor>>::iterator it = actorList.begin(); it != actorList.end(); it++)
+		for (std::vector<std::shared_ptr<LEActor>>::iterator it = dynamicActorList.begin(); it != dynamicActorList.end(); it++)
 		{
 			//Update then get the new world matrix
 			(*it)->Update(deltaTime);			
@@ -501,16 +504,17 @@ void LittleEngineD12::Update(float deltaTime)
 			memcpy(cbvGPUAddress[frameIndex] + (*it)->GetConstantBufferOffset(), &cbPerObject, sizeof(cbPerObject));
 		}
 
-		if (collision->AABBCollision(actorList[0]->GetAABBCollider(), actorList[1]->GetAABBCollider()))
-		{
-			actorList[0]->Reset();
-			actorList[1]->Reset();
-		}
+		//
+		//Collision
+		//
+
+		//TODO:Collision
 	}
 }
 
 void LittleEngineD12::UpdateCamera(float deltaTime)
 {
+
 }
 
 void LittleEngineD12::UpdatePipeline()
@@ -586,7 +590,7 @@ void LittleEngineD12::UpdatePipeline()
 	}
 	else if (LEState == State::Playing)
 	{
-		for (std::vector<std::shared_ptr<LEActor>>::iterator it = actorList.begin(); it != actorList.end(); it++)
+		for (std::vector<std::shared_ptr<LEActor>>::iterator it = dynamicActorList.begin(); it != dynamicActorList.end(); it++)
 		{
 			(*it)->Render(3, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
 		}
@@ -660,6 +664,7 @@ void LittleEngineD12::Cleanup()
 	};
 
 	modelManager->CleanUp();
+
 	SAFE_RELEASE(depthStencilBuffer);
 	SAFE_RELEASE(dSDescriptorHeap);
 

@@ -84,7 +84,8 @@ public:
 
 	std::shared_ptr<LALogo> ALogo;
 
-	std::vector<std::shared_ptr<LEActor>> actorList;
+	std::vector<std::shared_ptr<LEActor>> dynamicActorList;
+	std::vector<std::shared_ptr<LEActor>> staticActorList;
 
 
 	XMFLOAT4X4 cameraProjMat; // this will store our projection matrix

@@ -15,7 +15,7 @@ LEActor::LEActor(XMFLOAT4 startPosition, XMFLOAT3 startRotation, XMFLOAT3 startS
 LEActor::~LEActor()
 {}
 
-void LEActor::Initialise(ID3D12GraphicsCommandList* commandList, std::shared_ptr<ModelImporter> actorModel, std::shared_ptr<TextureImporter> modelTexture)
+void LEActor::Initialise(ID3D12GraphicsCommandList* commandList, std::shared_ptr<ModelImporter> actorModel, std::shared_ptr<TextureImporter> modelTexture = nullptr)
 {
 	m_commandList = commandList;
 	model = actorModel;
@@ -56,9 +56,9 @@ void LEActor::Render(UINT textureRootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS G
 
 	model->SetBuffers();
 
-	// set cube1's constant buffer
+	// set the actors's constant buffer
 	m_commandList->SetGraphicsRootConstantBufferView(2, GPUVirtualAdress + ConstantBufferOffset);
 
-	// draw first cube
+	// draw actor
 	m_commandList->DrawIndexedInstanced(model->GetIndeciesCount(), 1, 0, 0, 0);
 }

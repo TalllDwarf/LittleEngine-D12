@@ -35,6 +35,8 @@ bool ShaderManager::Initialise(ID3D12Device * device, DXGI_SAMPLE_DESC sampleDes
 	descriptorTableRange[0].RegisterSpace = 0; //Space 0 can usually be zero
 	descriptorTableRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; //This appends the range to the end of the root signature descriptor table
 
+	
+
 	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRange);
 	descriptorTable.pDescriptorRanges = &descriptorTableRange[0];
@@ -105,7 +107,7 @@ bool ShaderManager::Initialise(ID3D12Device * device, DXGI_SAMPLE_DESC sampleDes
 	//
 	//Texture Shader
 	//
-	/*
+	
 	{
 		std::shared_ptr<TextureShader> texShader = std::make_shared<TextureShader>();
 
@@ -116,7 +118,7 @@ bool ShaderManager::Initialise(ID3D12Device * device, DXGI_SAMPLE_DESC sampleDes
 
 		shaders[ShaderTypes::Texture_Shader] = texShader;
 	}
-	*/
+	
 
 	//
 	//Light Texture
