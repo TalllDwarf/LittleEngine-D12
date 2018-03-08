@@ -38,16 +38,18 @@ public:
 
 	virtual void Reset() override;
 
+	//Change camera views
 	void SetToOthoView();
 	void SetToPerpsView(float width, float height);
 
+	//Can the camera move
 	void CanPlayerMove(bool moveable) { canMove = moveable; }
 
 	//Get the input controller
 	void GetInput(Input* playerinput) { m_playerInput = playerinput; }
 
 	//Get the camera buffer giving us better controle
-	void SetBuffer(ConstantCameraBuffer* cbCameraBuffer) { m_cbCameraObject = cbCameraBuffer; }
+	void SetBuffer(ConstantCameraBuffer* cbCameraBuffer);
 
 };
 

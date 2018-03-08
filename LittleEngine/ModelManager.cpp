@@ -26,26 +26,6 @@ bool ModelManager::Initialise(ID3D12Device * device, ID3D12GraphicsCommandList *
 		return false;
 	}
 
-	if (!LoadModel(Model::CAR1))
-	{
-		return false;
-	}
-
-	if (!LoadModel(Model::CAR2))
-	{
-		return false;
-	}
-
-	if (!LoadModel(Model::CAR3))
-	{
-		return false;
-	}
-
-	if (!LoadModel(Model::CAR4))
-	{
-		return false;
-	}
-
 	if (!LoadModel(Model::FLOOR))
 	{
 		return false;

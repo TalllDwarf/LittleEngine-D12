@@ -243,7 +243,6 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 	//The player does not have a model or texture
 	APlayer->Initialise(commandList, nullptr, nullptr);
 
-
 	//
 	//Logo
 	//
@@ -251,35 +250,13 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 	ALogo = std::make_shared<LALogo>();
 	ALogo->Initialise(commandList, modelManager->GetModel(Model::PLANE), textureManager->GetTexture(Texture::LOGO));
 
-	//Car 1
-	{
-		std::shared_ptr<BasicCar> carActor = std::make_shared<BasicCar>();
-		carActor->Initialise(commandList, modelManager->GetModel(Model::CAR1), textureManager->GetTexture(Texture::CAR1V1));
-		carActor->SetPositions(20.0f, -20.0f);
-		carActor->InitialiseAABBCollision();
+	//
+	//
+	//Dynamic actor init
+	//
+	//
 
-		dynamicActorList.push_back(carActor);
-	}
 
-	//Car 2
-	{
-		std::shared_ptr<BasicCar> carActor = std::make_shared<BasicCar>();
-		carActor->Initialise(commandList, modelManager->GetModel(Model::CAR2), textureManager->GetTexture(Texture::CAR2V1));
-		carActor->SetPositions(0.0f, -2.0f);
-		carActor->InitialiseAABBCollision();
-
-		dynamicActorList.push_back(carActor);
-	}
-
-	//Car 3
-	{
-		std::shared_ptr<BasicCar> carActor = std::make_shared<BasicCar>();
-		carActor->Initialise(commandList, modelManager->GetModel(Model::CAR3), textureManager->GetTexture(Texture::CAR3V1));
-		carActor->SetPositions(-20.0f, -2.0f);
-		carActor->InitialiseAABBCollision();
-
-		dynamicActorList.push_back(carActor);
-	}
 
 	//
 	//
@@ -452,9 +429,10 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 
 	//Camera setup
+	APlayer->SetBuffer(&cbCameraObject);
 	APlayer->SetToOthoView();
 	APlayer->GetInput(playerInput);
-	APlayer->SetBuffer(&cbCameraObject);
+	
 
 	//
 	//Light Buffer

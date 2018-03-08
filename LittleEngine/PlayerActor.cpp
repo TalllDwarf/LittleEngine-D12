@@ -19,10 +19,6 @@ PlayerActor::PlayerActor() : LEActor(XMFLOAT4(0.0f, 2.0f, -18.0f, 0.0f))
 	XMVECTOR cUp = XMLoadFloat4(&cameraUp);
 	XMStoreFloat4x4(&cameraViewMat, XMMatrixLookAtLH(cPos, cTarg, cUp));
 
-	XMMATRIX viewMat = XMLoadFloat4x4(&cameraViewMat); // load view matrix
-													   //Transpose for graphic card
-	XMStoreFloat4x4(&m_cbCameraObject->viewMatrix, XMMatrixTranspose(viewMat));
-
 	canMove = false;
 }
 
@@ -78,16 +74,17 @@ void PlayerActor::Update(float deltaTime)
 		XMStoreFloat4(&transform.Position, camPos);
 	}
 
+	
 	//
 	//Camera
 	//
-	/*
 	XMMATRIX viewMat = XMLoadFloat4x4(&cameraViewMat); // load view matrix
 	XMMATRIX projMat = XMLoadFloat4x4(&cameraProjMat); // load projection matrix
 	//Transpose for graphic card
 	XMStoreFloat4x4(&m_cbCameraObject->viewMatrix, XMMatrixTranspose(viewMat));
 	XMStoreFloat4x4(&m_cbCameraObject->projMatrix, XMMatrixTranspose(projMat));
-	*/
+	
+	
 	m_cbCameraObject->cameraPosition = transform.Position;
 }
 
@@ -100,8 +97,6 @@ void PlayerActor::SetToOthoView()
 	// build projection and view matrix
 	XMMATRIX tmpMat = XMMatrixOrthographicLH(19.2, 10.8, 0.1f, 40.0f);
 	XMStoreFloat4x4(&cameraProjMat, tmpMat);
-													   //Transpose for graphic card
-	XMStoreFloat4x4(&m_cbCameraObject->projMatrix, XMMatrixTranspose(tmpMat));
 }
 
 void PlayerActor::SetToPerpsView(float width, float height)
@@ -109,6 +104,9 @@ void PlayerActor::SetToPerpsView(float width, float height)
 	//Change projection matrix to perspective
 	XMMATRIX projMat = XMMatrixPerspectiveFovLH(80.0f*(3.14f / 180.0f), width / height, 0.1f, 1000.0f);
 	XMStoreFloat4x4(&cameraProjMat, projMat);
+}
 
-	XMStoreFloat4x4(&m_cbCameraObject->projMatrix, XMMatrixTranspose(projMat));
+void PlayerActor::SetBuffer(ConstantCameraBuffer * cbCameraBuffer)
+{
+	m_cbCameraObject = cbCameraBuffer;
 }

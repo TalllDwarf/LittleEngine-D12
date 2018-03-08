@@ -7,10 +7,6 @@ namespace Model
 {
 	static const char* PLANE = "Model/Plane.obj";
 	static const char* CUBE = "Model/Cube.obj";
-	static const char* CAR1 = "Model/Car_1.obj";
-	static const char* CAR2 = "Model/Car_2.obj";
-	static const char* CAR3 = "Model/Car_3.obj";
-	static const char* CAR4 = "Model/Car_4.obj";
 
 	static const char* FLOOR = "Model/Building/Floor.obj";
 	static const char* WALL = "Model/Building/Wall.obj";
