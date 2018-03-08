@@ -11,10 +11,8 @@ LittleEngineD12::~LittleEngineD12()
 {
 }
 
-bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen, std::shared_ptr<Input> playerInput)
+bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen, Input* playerInput)
 {
-	m_playerInput = playerInput;
-
 	HRESULT hr;
 
 	windowSize.x = width;
@@ -234,8 +232,20 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 	//
 	//
-	//Actor init
+	//Dynamic Actor init
 	//
+	//
+
+	//
+	//Player
+	//
+	APlayer = std::make_shared<PlayerActor>();
+	//The player does not have a model or texture
+	APlayer->Initialise(commandList, nullptr, nullptr);
+
+
+	//
+	//Logo
 	//
 
 	ALogo = std::make_shared<LALogo>();
@@ -269,6 +279,31 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 		carActor->InitialiseAABBCollision();
 
 		dynamicActorList.push_back(carActor);
+	}
+
+	//
+	//
+	//Static actor init
+	//
+	//
+
+	//Floor
+	{
+		std::shared_ptr<LEActor> floorActor = std::make_shared<LEActor>();
+		floorActor->Initialise(commandList, modelManager->GetModel(Model::FLOOR), textureManager->GetTexture(Texture::FLOOR));
+		floorActor->InitialiseAABBCollision();
+
+		staticActorList.push_back(floorActor);
+	}
+
+	//Wall
+	//if they all share the same texture we do not need to assign each one the texture
+	{
+		std::shared_ptr<LEActor> wallActor = std::make_shared<LEActor>(XMFLOAT4(10.0f,0.0f,10.0f,0.0f));
+		wallActor->Initialise(commandList, modelManager->GetModel(Model::WALL), textureManager->GetTexture(Texture::WALL));
+		wallActor->InitialiseAABBCollision();
+
+		staticActorList.push_back(wallActor);
 	}
 	
 	//
@@ -369,6 +404,19 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 			memcpy(cbvGPUAddress[i] + position, &cbPerObject, sizeof(cbPerObject));
 			position += ConstantBufferObjectAlignedSize;
 		}
+
+		for (std::vector<std::shared_ptr<LEActor>>::iterator it = staticActorList.begin(); it != staticActorList.end(); it++)
+		{
+			//Set constant buffer
+			(*it)->SetConstantBufferOffset(position);
+			memcpy(cbvGPUAddress[i] + position, &cbPerObject, sizeof(cbPerObject));
+
+			//write the world matrix into the buffer
+			XMStoreFloat4x4(&cbPerObject.worldMatrix, XMMatrixTranspose((*it)->transform.GetWorldMatrix()));
+			memcpy(cbvGPUAddress[i] + position, &cbPerObject, sizeof(cbPerObject));
+
+			position += ConstantBufferObjectAlignedSize;
+		}
 	}
 
 	// Now we execute the command list to upload the initial assets (triangle data)
@@ -402,34 +450,19 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 	scissorRect.right = width;
 	scissorRect.bottom = height;
 
-	// build projection and view matrix
-	XMMATRIX tmpMat = XMMatrixOrthographicLH(19.2, 10.8, 0.1f, 40.0f);
-	XMStoreFloat4x4(&cameraProjMat, tmpMat);
 
-	// set starting camera state
-	cameraPosition = XMFLOAT4(0.0f, 2.0f, -14.0f, 0.0f);
-	cameraTarget = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-	cameraUp = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
-
-	// build view matrix
-	XMVECTOR cPos = XMLoadFloat4(&cameraPosition);
-	XMVECTOR cTarg = XMLoadFloat4(&cameraTarget);
-	XMVECTOR cUp = XMLoadFloat4(&cameraUp);
-	tmpMat = XMMatrixLookAtLH(cPos, cTarg, cUp);
-	XMStoreFloat4x4(&cameraViewMat, tmpMat);
-
-	//
-	//End Camera
-	//
-
+	//Camera setup
+	APlayer->SetToOthoView();
+	APlayer->GetInput(playerInput);
+	APlayer->SetBuffer(&cbCameraObject);
 
 	//
 	//Light Buffer
 	//
 	cbLightObject.ambientColor = XMFLOAT4(0.15f, 0.15f, 0.15f, 1.0f);
 	cbLightObject.diffuseColor = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	cbLightObject.lightDirection = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	cbLightObject.specularColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	cbLightObject.lightDirection = XMFLOAT3(0.0f, -0.5f, 1.0f);
+	cbLightObject.specularColor = XMFLOAT4(0.8f, 0.8f, 0.8f, 0.8f);
 	cbLightObject.specularPower = 32.0f;
 
 	//
@@ -444,17 +477,8 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 void LittleEngineD12::Update(float deltaTime)
 {
-	UpdateCamera(deltaTime);
-
-	//
-	//Camera
-	//
-	XMMATRIX viewMat = XMLoadFloat4x4(&cameraViewMat); // load view matrix
-	XMMATRIX projMat = XMLoadFloat4x4(&cameraProjMat); // load projection matrix
-	XMStoreFloat4x4(&cbCameraObject.viewMatrix, XMMatrixTranspose(viewMat));
-	XMStoreFloat4x4(&cbCameraObject.projMatrix, XMMatrixTranspose(projMat));
-	cbCameraObject.cameraPosition = cameraPosition;
-
+	//Updates the player/Camera position
+	APlayer->Update(deltaTime);
 	memcpy(cbvGPUAddress[frameIndex], &cbCameraObject, sizeof(cbCameraObject));
 
 	if (LEState == State::Logo)
@@ -467,24 +491,11 @@ void LittleEngineD12::Update(float deltaTime)
 		memcpy(cbvGPUAddress[frameIndex] + ALogo->GetConstantBufferOffset(), &cbPerObject, sizeof(cbPerObject));
 
 		if (ALogo->HasFinished())
-		{
-			projMat = XMMatrixPerspectiveFovLH(80.0f*(3.14f / 180.0f), (float)windowSize.x / (float)windowSize.y, 0.1f, 1000.0f);
-			
-			// Change the camera to Perspective
-			cameraPosition = XMFLOAT4(0.0f, 2.0f, -80.0f, 0.0f);
-			cameraTarget = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-			cameraUp = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
+		{	
+			APlayer->SetToPerpsView(windowSize.x, windowSize.y);
+			APlayer->CanPlayerMove(true);
 
-			// build view matrix
-			XMVECTOR cPos = XMLoadFloat4(&cameraPosition);
-			XMVECTOR cTarg = XMLoadFloat4(&cameraTarget);
-			XMVECTOR cUp = XMLoadFloat4(&cameraUp);
-			XMMATRIX tmpMat = XMMatrixLookAtLH(cPos, cTarg, cUp);
-			XMStoreFloat4x4(&cameraViewMat, tmpMat);
-
-			XMStoreFloat4x4(&cameraProjMat, projMat);
-
-			LEState = State::Playing;
+			LEState = State::Playing;			
 		}
 	}
 	else if (LEState == State::Playing)
@@ -493,11 +504,11 @@ void LittleEngineD12::Update(float deltaTime)
 		for (std::vector<std::shared_ptr<LEActor>>::iterator it = dynamicActorList.begin(); it != dynamicActorList.end(); it++)
 		{
 			//Update then get the new world matrix
-			(*it)->Update(deltaTime);			
+			(*it)->Update(deltaTime);
 			worldMatrix = (*it)->transform.GetWorldMatrix();
 
 			//Store the new world matrix for the constant buffer and update the collision
-			//Transpose the matrix for the graphic card
+			//Transpose the matrix for the grap`hic card
 			XMStoreFloat4x4(&cbPerObject.worldMatrix, XMMatrixTranspose(worldMatrix));
 			(*it)->UpdateCollision(worldMatrix);
 
@@ -510,11 +521,6 @@ void LittleEngineD12::Update(float deltaTime)
 
 		//TODO:Collision
 	}
-}
-
-void LittleEngineD12::UpdateCamera(float deltaTime)
-{
-
 }
 
 void LittleEngineD12::UpdatePipeline()
@@ -591,6 +597,11 @@ void LittleEngineD12::UpdatePipeline()
 	else if (LEState == State::Playing)
 	{
 		for (std::vector<std::shared_ptr<LEActor>>::iterator it = dynamicActorList.begin(); it != dynamicActorList.end(); it++)
+		{
+			(*it)->Render(3, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+		}
+
+		for (std::vector<std::shared_ptr<LEActor>>::iterator it = staticActorList.begin(); it != staticActorList.end(); it++)
 		{
 			(*it)->Render(3, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
 		}

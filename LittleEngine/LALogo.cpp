@@ -1,5 +1,4 @@
-	#include "LALogo.h"
-
+#include "LALogo.h"
 
 LALogo::LALogo() : LEActor(XMFLOAT4(17.0f,0.0f,0.0f,0.0f))
 {

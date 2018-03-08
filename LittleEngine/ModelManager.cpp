@@ -46,6 +46,26 @@ bool ModelManager::Initialise(ID3D12Device * device, ID3D12GraphicsCommandList *
 		return false;
 	}
 
+	if (!LoadModel(Model::FLOOR))
+	{
+		return false;
+	}
+
+	if (!LoadModel(Model::WALL))
+	{
+		return false;
+	}
+
+	if (!LoadModel(Model::SMALLWALL))
+	{
+		return false;
+	}
+
+	if (!LoadModel(Model::SMALLWALLDOOR))
+	{
+		return false;
+	}
+	
 	return true;
 }
 

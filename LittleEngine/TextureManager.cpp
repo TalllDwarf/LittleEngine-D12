@@ -42,6 +42,16 @@ bool TextureManager::Initialise(ID3D12Device * device, ID3D12GraphicsCommandList
 		return false;
 	}
 
+	if (!LoadTexture(Texture::FLOOR))
+	{
+		return false;
+	}
+
+	if (!LoadTexture(Texture::WALL))
+	{
+		return false;
+	}
+
 	return true;
 }
 

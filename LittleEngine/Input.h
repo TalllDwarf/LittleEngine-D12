@@ -1,6 +1,7 @@
 #pragma once
-#include "stdafx.h"
+#include <Windows.h>
 #include <Xinput.h>
+
 
 enum
 {
@@ -92,7 +93,8 @@ private:
 
 	//Mouse size is 40 keyboard is 32 
 	//We will fill it with one at a time
-	BYTE m_buffer[40];
+	UINT8 m_buffer[48];
+	//BYTE m_buffer[40];
 
 	int m_nMouseXChange;
 	int m_nMouseYChange;

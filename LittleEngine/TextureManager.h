@@ -9,6 +9,9 @@ namespace Texture
 	static const wchar_t* CAR2V1 = L"Texture/Car_04.png";
 	static const wchar_t* CAR3V1 = L"Texture/Car_07.png";
 	static const wchar_t* CAR4V1 = L"Texture/Car_10.png";
+
+	static const wchar_t* FLOOR = L"Texture/city/Tileable7h.png";
+	static const wchar_t* WALL = L"Texture/city/Tileable1b.png";
 }
 
 class TextureManager

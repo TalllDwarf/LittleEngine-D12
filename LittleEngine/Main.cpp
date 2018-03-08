@@ -2,6 +2,7 @@
 #include "LittleEngineD12.h"
 #include "StepTimer.h"
 #include "Input.h"
+#include <windowsx.h>
 
 // Handle to the window.
 HWND m_hWnd;
@@ -22,7 +23,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 std::unique_ptr<LittleEngineD12> littleEngine;
 
 //Input
-std::shared_ptr<Input> playerInput;
+Input playerInput;
 
 //Timer
 DX::StepTimer timer;
@@ -82,6 +83,11 @@ bool InitializeWindow(HINSTANCE hInstance, int showWnd, int width, int height, b
 	ShowWindow(m_hWnd, showWnd);
 	UpdateWindow(m_hWnd);
 
+	if (playerInput.RegisterDevices() != 0)
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -90,27 +96,31 @@ void mainLoop()
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
 
+	int x = 0, y = 0;
+
 	while (littleEngine->IsRunning() && running)
 	{
 		timer.Tick([&]()
 		{
 			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 			{
-				if (msg.message == WM_INPUT)
-				{
-					playerInput->GetData(msg.lParam);
-				}
-				else if (msg.message == WM_QUIT)
-					running = false;
-
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
+
+				if (msg.message == WM_INPUT)
+				{
+					playerInput.GetData(msg.lParam);
+				}			
+				else if (msg.message == WM_QUIT)
+				{
+					running = false;
+				}
 			}
 			
 			if(running)
 			{
 				//Player update
-				playerInput->Update();
+				playerInput.Update();
 
 				//Game
 				littleEngine->Update(timer.GetElapsedSeconds());
@@ -132,25 +142,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//is fullscreen
 	bool Fullscreen = false;
 
-
 	if (!InitializeWindow(hInstance, nCmdShow, Width, Height, Fullscreen))
 	{
 		MessageBox(0, "Window Initialization - Failed", "Error", MB_OK);
 		return 0;
 	}
 
-	//Player input
-	playerInput = std::make_shared<Input>();
-
-	if (playerInput->RegisterDevices() != 0)
-	{
-		return 1;
-	}
-
 	//Directx 
 	littleEngine = std::make_unique<LittleEngineD12>();
 
-	if (!littleEngine->InitD3D(m_hWnd, Width, Height, Fullscreen, playerInput))
+	if (!littleEngine->InitD3D(m_hWnd, Width, Height, Fullscreen, &playerInput))
 	{
 		return 2;
 	}
@@ -162,10 +163,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	return 0;
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd,
-	UINT msg,
-	WPARAM wParam,
-	LPARAM lParam)
+LRESULT CALLBACK WndProc(HWND hwnd,	UINT msg,	WPARAM wParam,	LPARAM lParam)
 {
 	switch (msg)
 	{

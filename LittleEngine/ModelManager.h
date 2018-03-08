@@ -11,6 +11,11 @@ namespace Model
 	static const char* CAR2 = "Model/Car_2.obj";
 	static const char* CAR3 = "Model/Car_3.obj";
 	static const char* CAR4 = "Model/Car_4.obj";
+
+	static const char* FLOOR = "Model/Building/Floor.obj";
+	static const char* WALL = "Model/Building/Wall.obj";
+	static const char* SMALLWALL = "Model/Building/SmallWall.obj";
+	static const char* SMALLWALLDOOR = "Model/Building/SmallWallDoor.obj";
 };
 
 class ModelManager

@@ -9,6 +9,7 @@
 //
 //Actors
 //
+#include "PlayerActor.h"
 #include "LALogo.h"
 #include "BasicCar.h"
 
@@ -19,9 +20,6 @@ class LittleEngineD12
 public:
 	LittleEngineD12();
 	~LittleEngineD12();
-
-	//Input
-	std::shared_ptr<Input> m_playerInput;
 
 	// direct3d stuff
 	//const int frameBufferCount = 3; // number of buffers we want, 2 for double buffering, 3 for tripple buffering
@@ -82,18 +80,13 @@ public:
 
 	std::shared_ptr<PCollision> collision;
 
+	//Special actors
+	std::shared_ptr<PlayerActor> APlayer;
 	std::shared_ptr<LALogo> ALogo;
 
+	//Actor arrays
 	std::vector<std::shared_ptr<LEActor>> dynamicActorList;
 	std::vector<std::shared_ptr<LEActor>> staticActorList;
-
-
-	XMFLOAT4X4 cameraProjMat; // this will store our projection matrix
-	XMFLOAT4X4 cameraViewMat; // this will store our view matrix
-
-	XMFLOAT4 cameraPosition; // this is our cameras position vector
-	XMFLOAT4 cameraTarget; // a vector describing the point in space our camera is looking at
-	XMFLOAT4 cameraUp; // the worlds up vector
 
 	XMFLOAT2 windowSize;
 
@@ -102,11 +95,9 @@ public:
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)
 
 						   // function declarations
-	bool InitD3D(HWND hwnd, int width, int height, bool fullScreen, std::shared_ptr<Input> playerInput); // initializes direct3d 12
+	bool InitD3D(HWND hwnd, int width, int height, bool fullScreen, Input* playerInput); // initializes direct3d 12
 
 	void Update(float deltaTime); // update the game logic
-
-	void UpdateCamera(float deltaTime);
 
 	void UpdatePipeline(); // update the direct3d pipeline (update command lists)
 

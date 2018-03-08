@@ -1,9 +1,10 @@
+#include "stdafx.h"
 #include "Input.h"
 
 
 Input::Input() : m_nMouseXChange(0), m_nMouseYChange(0), m_nMouseX(0), m_nMouseY(0), m_bLMB(0), m_bRMB(0)
 {
-
+	m_gamepadConnected = false;
 }
 
 
@@ -13,15 +14,15 @@ Input::~Input()
 
 INT Input::RegisterDevices()
 {
-	//Keyboard
+	//Mouse
 	m_Rid[0].usUsagePage = 0x01;
-	m_Rid[0].usUsage = 0x06;
+	m_Rid[0].usUsage = 0x02;
 	m_Rid[0].dwFlags = 0x00;
 	m_Rid[0].hwndTarget = 0;
 
-	//Mouse
+	//Keyboard
 	m_Rid[1].usUsagePage = 0x01;
-	m_Rid[1].usUsage = 0x02;
+	m_Rid[1].usUsage = 0x06;
 	m_Rid[1].dwFlags = 0x00;
 	m_Rid[1].hwndTarget = 0;
 
@@ -42,7 +43,7 @@ void Input::GetData(LPARAM lParam)
 	// Create a buffer of the correct size - but see note below
 
 	// Call the function again, this time with the buffer to get the data
-	if (bufferSize <= 40)
+	if (bufferSize <= 48)
 		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, (LPVOID)m_buffer, &bufferSize, sizeof(RAWINPUTHEADER));
 
 	RAWINPUT *raw = (RAWINPUT*)m_buffer;
@@ -54,7 +55,6 @@ void Input::GetData(LPARAM lParam)
 		// Get values from the mouse member (of type RAWMOUSE)
 		m_nMouseXChange = raw->data.mouse.lLastX;
 		m_nMouseYChange = raw->data.mouse.lLastY;
-
 
 		bool bStateDown = raw->data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN;
 		bool bStateUp = raw->data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP;
@@ -200,7 +200,6 @@ void Input::ResetAllKeyData()
 
 float Input::Forward(float deltaTime)
 {
-
 	if (m_gamepadConnected)
 	{
 		float leftValue = (m_leftY * m_leftNormalizedMagnitude) * deltaTime;
@@ -279,7 +278,7 @@ float Input::GetRightChangeX(float deltaTime)
 			return rightValue;
 	}
 
-	return GetMouseChangeX() * 500;
+	return GetMouseChangeX();
 }
 
 float Input::GetRightChangeY(float deltaTime)

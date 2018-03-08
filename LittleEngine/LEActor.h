@@ -21,26 +21,26 @@ public:
 	void Initialise(ID3D12GraphicsCommandList* commandList, std::shared_ptr<ModelImporter> actorModel, std::shared_ptr<TextureImporter> modelTexture);
 
 	//Creates AABB collision for the actor
-	void InitialiseAABBCollision();
+	virtual void InitialiseAABBCollision();
 
 	//Creates Sphere collision for the actor
-	void InitialiseSphereCollision();
+	virtual void InitialiseSphereCollision();
 
 	//Updates our collision with the new world matrix
-	void UpdateCollision(XMMATRIX& worldMatrix);
+	virtual void UpdateCollision(XMMATRIX& worldMatrix);
 
 	//sets the constant buffer position where this actors data is stored
 	void SetConstantBufferOffset(UINT constantBufferOffset) { ConstantBufferOffset = constantBufferOffset; };
 	UINT GetConstantBufferOffset() { return ConstantBufferOffset; }
 
 	//Update function needs to be implemented by all actors
-	virtual void Update(float deltaTime) = 0;
+	virtual void Update(float deltaTime) {};
 
 	//Render the model to the screen
 	void Render(UINT textureRootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAdress);
 
 	//Resets the Actor to its starting position
-	virtual void Reset() = 0;
+	virtual void Reset() {};
 
 	//Return our colliders
 	std::shared_ptr<CollisionAABB> GetAABBCollider() { return collisionAABB; }
