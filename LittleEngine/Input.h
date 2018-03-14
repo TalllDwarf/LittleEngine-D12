@@ -60,6 +60,9 @@ public:
 	bool IsLeftMouseButtonDown() { return m_bLMB; }
 	bool IsRightMouseButtonDown() { return m_bRMB; }
 
+	bool OnLeftMouseButtonDown() { return (!m_oldbLMB && m_bLMB); }
+	bool OnRightMouseButtonDown() { return (!m_oldbRMB && m_bRMB); }
+
 	int GetMouseChangeX() { int mouseChange = m_nMouseXChange; m_nMouseXChange = 0; return mouseChange; }
 	int GetMouseChangeY() { int mouseChange = m_nMouseYChange; m_nMouseYChange = 0; return mouseChange; }
 
@@ -101,6 +104,9 @@ private:
 
 	bool m_bLMB;
 	bool m_bRMB;
+
+	bool m_oldbLMB;
+	bool m_oldbRMB;
 
 	// In the source file you will see how my enumerations come into play for knowing what index
 	// to access.

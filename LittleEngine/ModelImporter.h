@@ -12,6 +12,12 @@ public:
 	void Init(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 
 	bool OpenFile(const char* objPath);
+
+	void CalculateBinormalTangent();
+	void CalculateBT(TempVertex v1, TempVertex v2, TempVertex v3, XMFLOAT3& tangent, XMFLOAT3& binormal);
+
+	void CalcualteNewNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3& normal);
+
 	void SetBuffers();
 
 	void CommitResource();

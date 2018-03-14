@@ -6,8 +6,6 @@ class BasicCar :
 public:
 	BasicCar();
 	~BasicCar();
-	
-	void SetPositions(float start, float end);
 
 	virtual void Update(float deltaTime) override;
 

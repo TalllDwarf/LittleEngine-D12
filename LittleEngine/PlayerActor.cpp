@@ -1,6 +1,6 @@
 #include "PlayerActor.h"
 
-PlayerActor::PlayerActor() : LEActor(XMFLOAT4(0.0f, 2.0f, -18.0f, 0.0f))
+PlayerActor::PlayerActor() : LEActor(XMFLOAT4(0.0f, 10.0f, -18.0f, 0.0f))
 {
 	cameraSpeed = 20.0f;
 	runSpeedMultiplier = 4.0f;

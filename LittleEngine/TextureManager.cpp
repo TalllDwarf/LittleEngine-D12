@@ -22,12 +22,12 @@ bool TextureManager::Initialise(ID3D12Device * device, ID3D12GraphicsCommandList
 		return false;
 	}
 
-	if (!LoadTexture(Texture::FLOOR))
+	if (!LoadTexture(Texture::FLOOR, Bumpmap::FLOOR))
 	{
 		return false;
 	}
 
-	if (!LoadTexture(Texture::WALL))
+	if (!LoadTexture(Texture::WALL, Bumpmap::WALL))
 	{
 		return false;
 	}
@@ -52,14 +52,25 @@ void TextureManager::TextureCleanup()
 }
 
 //Load a texture then save it in the textures map
-bool TextureManager::LoadTexture(const wchar_t * texturePath)
+bool TextureManager::LoadTexture(const wchar_t * texturePath, const wchar_t* bumpPath)
 {
 	std::shared_ptr<TextureImporter> temp = std::make_shared<TextureImporter>();
 	temp->Initialise(m_device, m_commandList);
 	
-	if (!temp->LoadTexture(texturePath))
+	//If we have a bump path load it
+	if (bumpPath != nullptr)
 	{
-		return false;
+		if (!temp->LoadTexture(texturePath, bumpPath))
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (!temp->LoadTexture(texturePath))
+		{
+			return false;
+		}
 	}
 	
 	textures[texturePath] = temp;

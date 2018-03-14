@@ -21,6 +21,18 @@ public:
 	LittleEngineD12();
 	~LittleEngineD12();
 
+	Input* m_playerInput;
+
+	//
+	//Testing
+	//
+	ShaderManager::ShaderTypes currentShader = ShaderManager::ShaderTypes::Bump_Texture_Shader;
+	//
+	//
+	//
+		
+
+
 	// direct3d stuff
 	//const int frameBufferCount = 3; // number of buffers we want, 2 for double buffering, 3 for tripple buffering
 
@@ -65,10 +77,13 @@ public:
 	int ConstantBufferObjectAlignedSize = (sizeof(ConstantBufferObject) + 255) & ~255;
 	int ConstantCameraObjectAlignedSize = (sizeof(ConstantCameraBuffer) + 255) & ~255;
 	int ConstantLightObjectAlignedSize = (sizeof(ConstantLightBuffer) + 255) & ~255;
+	int ConstantSpotLightObjectAlignedSize = (sizeof(ConstantSpotLightBuffer) + 255) & ~255;
 
 	ConstantBufferObject cbPerObject; // this is the constant buffer data we will send to the gpu 
 	ConstantCameraBuffer cbCameraObject;  // (which will be placed in the resource we created above)
 	ConstantLightBuffer cbLightObject; //Holds out light data
+	ConstantSpotLightBuffer cbSpotLightObject;
+
 
 	ID3D12Resource* constantBufferUploadHeaps[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where constant buffers for each frame will be placed
 

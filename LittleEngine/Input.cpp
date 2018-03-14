@@ -52,6 +52,9 @@ void Input::GetData(LPARAM lParam)
 	// but I believe it works.
 	if (raw->header.dwType == RIM_TYPEMOUSE)
 	{
+		m_oldbLMB = m_bLMB;
+		m_oldbRMB = m_bRMB;
+
 		// Get values from the mouse member (of type RAWMOUSE)
 		m_nMouseXChange = raw->data.mouse.lLastX;
 		m_nMouseYChange = raw->data.mouse.lLastY;

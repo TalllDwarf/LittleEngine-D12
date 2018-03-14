@@ -40,7 +40,7 @@ bool ModelImporter::OpenFile(const char * objPath)
 			//if the line contains a vertex
 			if (strcmp(line, "v") == 0)
 			{
-				Vertex vertex(0, 0, 0, -1, -1, 0.0f, 0.0f, 0.0f);
+				Vertex vertex(0, 0, 0, -1, -1, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,0.0f);
 				fscanf_s(file, "%f %f %f\n", &vertex.pos.x, &vertex.pos.y, &vertex.pos.z);
 				vVector.push_back(vertex);
 			}
@@ -89,6 +89,11 @@ bool ModelImporter::OpenFile(const char * objPath)
 		fclose(file);
 
 		numOfIndecies = iVector.size();
+
+		//Get our Tangent
+		CalculateBinormalTangent();
+
+		
 		vBufferSize = vVector.size() * sizeof(Vertex);
 		iBufferSize = iVector.size() * sizeof(DWORD);
 
@@ -103,6 +108,116 @@ bool ModelImporter::OpenFile(const char * objPath)
 	}
 	
 	return true;
+}
+
+void ModelImporter::CalculateBinormalTangent()
+{
+	int faceCount, i, index;
+	TempVertex v1, v2, v3;
+	XMFLOAT3 tangent, binormal, normal;
+
+	faceCount = numOfIndecies / 3;
+
+	index = 0;
+
+	for (i = 0; i < faceCount; i++)
+	{
+		v1 = ToTemp(vVector[iVector[index]]);
+		index++;
+
+		v2 = ToTemp(vVector[iVector[index]]);
+		index++;
+
+		v3 = ToTemp(vVector[iVector[index]]);
+		index++;
+
+		CalculateBT(v1, v2, v3, tangent, binormal);
+		CalcualteNewNormal(tangent, binormal, normal);
+
+		vVector[iVector[index - 1]].tangent = tangent;
+		vVector[iVector[index - 2]].tangent = tangent;
+		vVector[iVector[index - 3]].tangent = tangent;
+
+		vVector[iVector[index - 1]].binormal = binormal;
+		vVector[iVector[index - 2]].binormal = binormal;
+		vVector[iVector[index - 3]].binormal = binormal;
+
+		vVector[iVector[index - 1]].normal = normal;
+		vVector[iVector[index - 2]].normal = normal;
+		vVector[iVector[index - 3]].normal = normal;
+	}
+}
+
+void ModelImporter::CalculateBT(TempVertex v1, TempVertex v2, TempVertex v3, XMFLOAT3 & tangent, XMFLOAT3 & binormal)
+{
+	float vector1[3], vector2[3];
+	float tuVector[2], tvVector[2];
+	float den;
+	float length;
+
+	// Calculate the two vectors for this face.
+	vector1[0] = v2.pos.x - v1.pos.x;
+	vector1[1] = v2.pos.y - v1.pos.y;
+	vector1[2] = v2.pos.z - v1.pos.z;
+
+	vector2[0] = v3.pos.x - v1.pos.x;
+	vector2[1] = v3.pos.y - v1.pos.y;
+	vector2[2] = v3.pos.z - v1.pos.z;
+
+	// Calculate the tu and tv texture space vectors.
+	tuVector[0] = v2.texCoord.x - v1.texCoord.x;
+	tvVector[0] = v2.texCoord.y - v1.texCoord.y;
+
+	tuVector[1] = v3.texCoord.x - v1.texCoord.x;
+	tvVector[1] = v3.texCoord.y - v1.texCoord.y;
+
+	// Calculate the denominator of the tangent/binormal equation.
+	den = 1.0f / (tuVector[0] * tvVector[1] - tuVector[1] * tvVector[0]);
+
+	// Calculate the cross products and multiply by the coefficient to get the tangent and binormal.
+	tangent.x = (tvVector[1] * vector1[0] - tvVector[0] * vector2[0]) * den;
+	tangent.y = (tvVector[1] * vector1[1] - tvVector[0] * vector2[1]) * den;
+	tangent.z = (tvVector[1] * vector1[2] - tvVector[0] * vector2[2]) * den;
+
+	binormal.x = (tuVector[0] * vector2[0] - tuVector[1] * vector1[0]) * den;
+	binormal.y = (tuVector[0] * vector2[1] - tuVector[1] * vector1[1]) * den;
+	binormal.z = (tuVector[0] * vector2[2] - tuVector[1] * vector1[2]) * den;
+
+	// Calculate the length of this normal.
+	length = sqrt((tangent.x * tangent.x) + (tangent.y * tangent.y) + (tangent.z * tangent.z));
+
+	// Normalize the normal and then store it
+	tangent.x = tangent.x / length;
+	tangent.y = tangent.y / length;
+	tangent.z = tangent.z / length;
+
+	// Calculate the length of this normal.
+	length = sqrt((binormal.x * binormal.x) + (binormal.y * binormal.y) + (binormal.z * binormal.z));
+
+	// Normalize the normal and then store it
+	binormal.x = binormal.x / length;
+	binormal.y = binormal.y / length;
+	binormal.z = binormal.z / length;
+}
+
+void ModelImporter::CalcualteNewNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3 & normal)
+{
+	float length;
+
+
+	// Calculate the cross product of the tangent and binormal which will give the normal vector.
+	normal.x = (tangent.y * binormal.z) - (tangent.z * binormal.y);
+	normal.y = (tangent.z * binormal.x) - (tangent.x * binormal.z);
+	normal.z = (tangent.x * binormal.y) - (tangent.y * binormal.x);
+
+	// Calculate the length of the normal.
+	length = sqrt((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));
+
+	// Normalize the normal.
+	normal.x = normal.x / length;
+	normal.y = normal.y / length;
+	normal.z = normal.z / length;
+
 }
 
 void ModelImporter::SetBuffers()

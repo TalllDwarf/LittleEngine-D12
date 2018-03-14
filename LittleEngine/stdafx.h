@@ -35,11 +35,34 @@ inline XMFLOAT3 Multi(XMFLOAT3 a, float b)
 }
 
 struct Vertex {
-	Vertex(float x, float y, float z, float u, float v, float nx, float ny, float nz) : pos(x, y, z), texCoord(u, v), normal(nx, ny, nz) {}
+	Vertex(float x, float y, float z, float u, float v, float nx, float ny, float nz, float tx, float ty, float tz) 
+		: pos(x, y, z), texCoord(u, v), normal(nx, ny, nz), tangent(tx,ty,tz) {}
 	XMFLOAT3 pos;
 	XMFLOAT2 texCoord;
 	XMFLOAT3 normal;
+	XMFLOAT3 tangent;
+	XMFLOAT3 binormal;
 };
+
+struct TempVertex {
+	XMFLOAT3 pos;
+	XMFLOAT2 texCoord;
+	XMFLOAT3 normal;
+	XMFLOAT3 tangent;
+	XMFLOAT3 binormal;
+};
+
+inline TempVertex ToTemp(Vertex a)
+{
+	TempVertex temp;
+	temp.pos = a.pos;
+	temp.texCoord = a.texCoord;
+	temp.normal = a.normal;
+	temp.tangent = a.tangent;
+	temp.binormal = a.binormal;
+
+	return temp;
+}
 
 // this is the structure of our constant buffer.
 struct ConstantCameraBuffer
@@ -56,6 +79,21 @@ struct ConstantLightBuffer
 	XMFLOAT3 lightDirection;
 	float specularPower;
 	XMFLOAT4 specularColor;
+	XMFLOAT3 lightPosition;
+	float range;
+	XMFLOAT3 att;
+};
+
+struct ConstantSpotLightBuffer
+{
+	XMFLOAT3 pos;
+	float range;
+	XMFLOAT3 dir;
+	float cone;
+	XMFLOAT3 att;
+	float pad2;
+	XMFLOAT4 ambient;
+	XMFLOAT4 diffuse;
 };
 
 struct ConstantBufferObject 

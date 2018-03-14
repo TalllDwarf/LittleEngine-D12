@@ -30,11 +30,10 @@ bool ShaderManager::Initialise(ID3D12Device * device, DXGI_SAMPLE_DESC sampleDes
 
 	D3D12_DESCRIPTOR_RANGE descriptorTableRange[1]; //only one range
 	descriptorTableRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; //this is a range of shader resource view
-	descriptorTableRange[0].NumDescriptors = 1; // We only have one texture right now so the range is only 1
+	descriptorTableRange[0].NumDescriptors = 2; // We only have one texture right now so the range is only 1
 	descriptorTableRange[0].BaseShaderRegister = 0; //Start index of the shader register in range
 	descriptorTableRange[0].RegisterSpace = 0; //Space 0 can usually be zero
 	descriptorTableRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; //This appends the range to the end of the root signature descriptor table
-
 	
 
 	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
@@ -64,10 +63,10 @@ bool ShaderManager::Initialise(ID3D12Device * device, DXGI_SAMPLE_DESC sampleDes
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
-	sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
-	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
-	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.Filter = D3D12_FILTER_ANISOTROPIC;  //D3D12_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR;
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampler.MipLODBias = 0;
 	sampler.MaxAnisotropy = 0;
 	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
@@ -132,6 +131,20 @@ bool ShaderManager::Initialise(ID3D12Device * device, DXGI_SAMPLE_DESC sampleDes
 		}
 
 		shaders[ShaderTypes::Light_Texture_Shader] = lightShader;
+	}
+
+	//
+	//Bump Texture
+	//
+	{
+		std::shared_ptr<BumpShader> bumpShader = std::make_shared<BumpShader>();
+
+		if (!bumpShader->Initialise(device, rootSignature, sampleDesc))
+		{
+			return false;
+		}
+
+		shaders[ShaderTypes::Bump_Texture_Shader] = bumpShader;
 	}
 
 	return true;

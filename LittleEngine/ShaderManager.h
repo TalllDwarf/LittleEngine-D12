@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "TextureShader.h"
 #include "LightShader.h"
+#include "BumpShader.h"
 
 class ShaderManager
 {
@@ -14,7 +15,8 @@ public:
 	enum ShaderTypes
 	{
 		Texture_Shader,
-		Light_Texture_Shader
+		Light_Texture_Shader,
+		Bump_Texture_Shader
 	};
 
 	bool Initialise(ID3D12Device* device, DXGI_SAMPLE_DESC sampleDesc);

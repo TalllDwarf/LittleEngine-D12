@@ -13,6 +13,8 @@ LittleEngineD12::~LittleEngineD12()
 
 bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen, Input* playerInput)
 {
+	m_playerInput = playerInput;
+
 	HRESULT hr;
 
 	windowSize.x = width;
@@ -230,6 +232,7 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 
 
+
 	//
 	//
 	//Dynamic Actor init
@@ -265,23 +268,53 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 	//
 
 	//Floor
-	{
-		std::shared_ptr<LEActor> floorActor = std::make_shared<LEActor>();
-		floorActor->Initialise(commandList, modelManager->GetModel(Model::FLOOR), textureManager->GetTexture(Texture::FLOOR));
-		floorActor->InitialiseAABBCollision();
+	for(int x = 0; x < 8; x++)
+		for(int y = 0; y < 8; y++)
+		{
+			std::shared_ptr<LEActor> floorActor = std::make_shared<LEActor>();
+			floorActor->Initialise(commandList, modelManager->GetModel(Model::FLOOR), textureManager->GetTexture(Texture::FLOOR));
+			floorActor->InitialiseAABBCollision();
+			floorActor->transform.Position = XMFLOAT4(-70.0f + (15.0f * x), 0.0f, -70.0f + (15.0f * y), 0.0f);
 
-		staticActorList.push_back(floorActor);
-	}
+			staticActorList.push_back(floorActor);
+		}
 
-	//Wall
+	//Right Wall
 	//if they all share the same texture we do not need to assign each one the texture
+	//The texture will stay for each one
 	{
-		std::shared_ptr<LEActor> wallActor = std::make_shared<LEActor>(XMFLOAT4(10.0f,0.0f,10.0f,0.0f));
+		std::shared_ptr<LEActor> wallActor = std::make_shared<LEActor>(XMFLOAT4(80.0f, 0.0f, 40.0f, 0.0f));
 		wallActor->Initialise(commandList, modelManager->GetModel(Model::WALL), textureManager->GetTexture(Texture::WALL));
 		wallActor->InitialiseAABBCollision();
 
 		staticActorList.push_back(wallActor);
 	}
+
+	{
+		std::shared_ptr<LEActor> wallActor = std::make_shared<LEActor>(XMFLOAT4(80.0f, 0.0f, -40.0f, 0.0f));
+		wallActor->Initialise(commandList, modelManager->GetModel(Model::WALL), nullptr);
+		wallActor->InitialiseAABBCollision();
+
+		staticActorList.push_back(wallActor);
+	}
+
+	//Left Wall
+	{
+		std::shared_ptr<LEActor> wallActor = std::make_shared<LEActor>(XMFLOAT4(-80.0f, 0.0f, 40.0f, 0.0f));
+		wallActor->Initialise(commandList, modelManager->GetModel(Model::WALL), nullptr);
+		wallActor->InitialiseAABBCollision();
+
+		staticActorList.push_back(wallActor);
+	}
+
+	{
+		std::shared_ptr<LEActor> wallActor = std::make_shared<LEActor>(XMFLOAT4(-80.0f, 0.0f, -40.0f, 0.0f));
+		wallActor->Initialise(commandList, modelManager->GetModel(Model::WALL), nullptr);
+		wallActor->InitialiseAABBCollision();
+
+		staticActorList.push_back(wallActor);
+	}
+
 	
 	//
 	//
@@ -386,7 +419,6 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 		{
 			//Set constant buffer
 			(*it)->SetConstantBufferOffset(position);
-			memcpy(cbvGPUAddress[i] + position, &cbPerObject, sizeof(cbPerObject));
 
 			//write the world matrix into the buffer
 			XMStoreFloat4x4(&cbPerObject.worldMatrix, XMMatrixTranspose((*it)->transform.GetWorldMatrix()));
@@ -431,17 +463,19 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 	//Camera setup
 	APlayer->SetBuffer(&cbCameraObject);
 	APlayer->SetToOthoView();
-	APlayer->GetInput(playerInput);
-	
+	APlayer->GetInput(playerInput);	
 
 	//
 	//Light Buffer
 	//
 	cbLightObject.ambientColor = XMFLOAT4(0.15f, 0.15f, 0.15f, 1.0f);
-	cbLightObject.diffuseColor = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	cbLightObject.lightDirection = XMFLOAT3(0.0f, -0.5f, 1.0f);
-	cbLightObject.specularColor = XMFLOAT4(0.8f, 0.8f, 0.8f, 0.8f);
-	cbLightObject.specularPower = 32.0f;
+	cbLightObject.diffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	cbLightObject.lightDirection = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	cbLightObject.specularColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	cbLightObject.specularPower = 64.0f;
+	cbLightObject.lightPosition = XMFLOAT3(0.0f, 3.0f, 0.0f);
+	cbLightObject.range = 10000.0f;
+	cbLightObject.att = XMFLOAT3(0.0f, 0.1f, 0.0f);
 
 	//
 	//Light
@@ -455,6 +489,16 @@ bool LittleEngineD12::InitD3D(HWND hwnd, int width, int height, bool fullScreen,
 
 void LittleEngineD12::Update(float deltaTime)
 {
+	if (m_playerInput->IsAlphabeticKeyDown(VKey_Q))
+	{
+		currentShader = ShaderManager::ShaderTypes::Light_Texture_Shader;
+	}
+	else if(m_playerInput->IsAlphabeticKeyDown(VKey_E))
+	{
+		currentShader = ShaderManager::ShaderTypes::Bump_Texture_Shader;
+	}
+	
+
 	//Updates the player/Camera position
 	APlayer->Update(deltaTime);
 	memcpy(cbvGPUAddress[frameIndex], &cbCameraObject, sizeof(cbCameraObject));
@@ -468,12 +512,12 @@ void LittleEngineD12::Update(float deltaTime)
 		XMStoreFloat4x4(&cbPerObject.worldMatrix, XMMatrixTranspose(ALogo->transform.GetWorldMatrix()));
 		memcpy(cbvGPUAddress[frameIndex] + ALogo->GetConstantBufferOffset(), &cbPerObject, sizeof(cbPerObject));
 
-		if (ALogo->HasFinished())
+		if (ALogo->HasFinished() || m_playerInput->IsLeftMouseButtonDown())
 		{	
 			APlayer->SetToPerpsView(windowSize.x, windowSize.y);
 			APlayer->CanPlayerMove(true);
-
-			LEState = State::Playing;			
+			APlayer->Update(deltaTime);
+			LEState = State::Playing;	
 		}
 	}
 	else if (LEState == State::Playing)
@@ -527,7 +571,16 @@ void LittleEngineD12::UpdatePipeline()
 	// but in this tutorial we are only clearing the rtv, and do not actually need
 	// anything but an initial default pipeline, which is what we get by setting
 	// the second parameter to NULL
-	hr = commandList->Reset(commandAllocator[frameIndex], shaderManager->GetPipelineState(ShaderManager::ShaderTypes::Light_Texture_Shader));
+
+	if (LEState == State::Logo)
+	{
+		hr = commandList->Reset(commandAllocator[frameIndex], shaderManager->GetPipelineState(ShaderManager::ShaderTypes::Texture_Shader));
+	}
+	else
+	{
+		hr = commandList->Reset(commandAllocator[frameIndex], shaderManager->GetPipelineState(currentShader));
+	}
+	
 	if (FAILED(hr))
 	{
 		LEState = State::Stopping;
@@ -574,6 +627,7 @@ void LittleEngineD12::UpdatePipeline()
 	}
 	else if (LEState == State::Playing)
 	{
+
 		for (std::vector<std::shared_ptr<LEActor>>::iterator it = dynamicActorList.begin(); it != dynamicActorList.end(); it++)
 		{
 			(*it)->Render(3, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
